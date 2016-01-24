@@ -1,15 +1,14 @@
 require "src/flirt"
 
 function love.load()
-	F.init(false)
+	F.init()
 	
 	animations = {
-		-- TODO: fix both case
-		idle = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1)
-		-- idle = F.createAnim("playerIdle", "cat", 512, 256, "1-2:1:1-2:2", 0.1)
+		idle = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1),
+		run = F.createAnim("playerRun", "cat", 512, 256, "1-2:1:1-2:2:1-2:3:1-2:4", 0.1)
 		-- walk<> run<> jump<> lookup<> stoop<> rise
 	}
-	spellRun = function(F)
+	spellRun = function()
 		love.graphics.print("hello", 300, 300)
 	end
 	controls = {
@@ -21,7 +20,7 @@ function love.load()
 		spell = {"q", spellRun}
 	}
 	F.createPlayer(animations, controls, 100, 200)
-	-- F.createEnemy(aminations)
+	-- F.createEnemy(animations)
 end
 
 function love.update(dt)
@@ -32,9 +31,9 @@ function love.draw()
 	F.draw()
 end
 
--- or set F.init(true)
 function love.keypressed(key)
-	if key == "`" then
-		F.debug = not F.debug
-	end
+	F.keypressed(key)
+end
+function love.keyreleased(key)
+	F.keyreleased(key)
 end

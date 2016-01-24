@@ -1,6 +1,7 @@
 local anim8 = require "src/anim8"
 local sti = require "src/sti"
 local actors = require "src/actors"
+local nh = require "src/noobHelpers"
 
 gr = love.graphics
 ph = love.physics
@@ -8,7 +9,7 @@ kb = love.keyboard
 fs = love.filesystem
 
 F = {
-	version = "0.0.1",
+	version = "0.0.2",
 	debug = false,
 	-- only names (without preload)
 	assets = {
@@ -19,7 +20,7 @@ F = {
 		music = {},
 		sound = {},
 	},
-	-- obj cache for optimize load (one assets for many objects)
+	-- obj cache for optimize load (one asset for many objects)
 	cache = {
 		anim = {},
 		font = {},
@@ -50,10 +51,6 @@ function F.createPlayer( animations, controls, x, y )
 	end
 end
 
--- function checkExistInCache(tableName, object)
--- 	-- body
--- end
-
 function F.init(debug)
 	F.debug = debug
 	F.registerAssets()
@@ -65,15 +62,9 @@ function F.registerAssets()
 	end
 end
 
-function F.split( string, separator )
-	fields = {}
-	string:gsub("([^"..separator.."]*)"..separator, function(c) table.insert(fields, c) end)
-	return fields
-end
-
 function F.createAnim(aName, name, x, y, frames, speed )
 	for k,fileName in pairs(F.assets.anim) do
-	    for n,str in pairs(F.split(fileName, ".")) do
+	    for n,str in pairs(nh.split(fileName, ".")) do
 			if str == name then
 				imageName = fileName
 				break
@@ -89,7 +80,16 @@ function F.createAnim(aName, name, x, y, frames, speed )
 	if F.cache.anim[aName] == nil then
 		-- TODO: see https://github.com/kikito/anim8
 	    g = anim8.newGrid(x, y, i:getWidth(), i:getHeight())
-	    args = F.split(frames, ":")
+
+	    -- args generic with numeric rows
+	    args = nh.split(frames, ":")
+	    for k,v in pairs(args) do
+	    	-- dirty
+	    	if string.find(v, "-") then
+			else
+		    	args[k] = tonumber(v)
+			end
+	    end
 	    F.cache.anim[aName] = anim8.newAnimation(g(unpack(args)), speed)
 	end
 	a = F.cache.anim[aName]
@@ -121,13 +121,41 @@ function F.draw()
 		drawBlock( "Sound: ", 	 F.assets.sound)
 		
 		drawBlock = F.drawBlock("Cache: ", 10, 130)
-		-- TODO: what? empty cache?
 		drawBlock( "Animations: ", F.cache.anim)
 		drawBlock( "Images: ", 	 F.cache.img)
 		drawBlock( "Fonts: ", 	 F.cache.font)
 		drawBlock( "Music: ", 	 F.cache.music)
 		drawBlock( "Sound: ", 	 F.cache.sound)
 	end
+end
+
+function F.keypressed(key)
+	
+	if key == F.player.ctrl.left[1]
+	or key == F.player.ctrl.right[1]
+	or key == F.player.ctrl.up[1]
+	or key == F.player.ctrl.down[1] then
+        F.player.animState = "run"
+    end
+
+	if key == F.player.ctrl.spell[1] then
+		-- TODO: in draw?
+        F.player.ctrl.spell[2]()
+    end
+
+	-- debug
+	if key == "`" then
+		F.debug = not F.debug
+	end
+end
+
+function F.keyreleased(key)
+	if key == F.player.ctrl.left[1]
+	or key == F.player.ctrl.right[1]
+	or key == F.player.ctrl.up[1]
+	or key == F.player.ctrl.down[1] then
+        F.player.animState = "idle"
+    end
 end
 
 function F.drawBlock(blockTitle, px, py, block)
@@ -138,10 +166,23 @@ function F.drawBlock(blockTitle, px, py, block)
 	local blockWidth = 130
 	local blockHeight = 12
 	function iter(text, table)
-		if #table > 0 then
-			gr.print(text..#table, px + block*blockWidth, py)
+		-- table maybe object or array
+    	if nh.isArray(table) > -1 then
+	    	-- its array
+			if #table > 0 then
+				gr.print(text..#table, px + block*blockWidth, py)
+				for k,v in pairs(table) do
+					gr.print(v, px + block*blockWidth, py + (k+1)*blockHeight)
+				end
+				block = block + 1
+			end
+		else
+	    	-- its object
+			gr.print(text..nh.tableCount(table), px + block*blockWidth, py)
+			n = 1
 			for k,v in pairs(table) do
-				gr.print(v, px + block*blockWidth, py + (k+1)*blockHeight)
+				gr.print(k, px + block*blockWidth, py + (n+1)*blockHeight)
+				n = n + 1
 			end
 			block = block + 1
 		end
