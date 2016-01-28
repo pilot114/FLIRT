@@ -11,6 +11,8 @@ fs = love.filesystem
 F = {
 	version = "0.0.2",
 	debug = false,
+	-- camera mode. current only "side"
+	mode = "side",
 	-- only names (without preload)
 	assets = {
 		anim = {},
@@ -28,31 +30,53 @@ F = {
 		music = {},
 		sound = {},
 	},
+	-- send print to draw callback
+	toPrint = {},
 
-	-- OBJECTS incapsulate assets, linked with them
+	-- ACTORS incapsulate assets, linked with them
 
 	-- (see createPlayer)
 	player = {},
 }
 
 function F.createPlayer( animations, controls, x, y )
+	-- set default user position
+	if x == nil and y == nil then
+		x = gr.getWidth()/2
+		y = gr.getHeight()/2
+	end
+
 	F.player = {
-		-- array {animObj, imageObj}
+		-- array {animObj, imageObj, frameWidth, frameHeight}
 		anim = animations,
 		-- ?
 		-- array {key, speed/callback, assets( anim/sound etc.)}
 		ctrl = controls,
+		-- player center position
 		x = x,
 		y = y,
-		dir = 1,
+		dir = 1, -- left 0, right 1, up 1.5, down 2
 	}
+
+	-- try get user size from first animation and centrize
+	for k,animation in pairs(animations) do
+		if animation ~= nil then
+			F.player.width  = animation[3]
+			F.player.height = animation[4]
+			F.player.x = F.player.x - F.player.width/2
+			F.player.y = F.player.y - F.player.height/2
+		end
+		break
+	end
+
 	if F.player.anim.idle ~= nil then
 		F.player.animState = "idle"
 	end
 end
 
-function F.init(debug)
+function F.init(debug, mode)
 	F.debug = debug
+	F.mode  = mode
 	F.registerAssets()
 end
 
@@ -94,7 +118,7 @@ function F.createAnim(aName, name, x, y, frames, speed )
 	end
 	a = F.cache.anim[aName]
 
-    return { a, i }
+    return { a, i, g.frameWidth, g.frameHeight }
 end
 
 function F.update(dt)
@@ -108,6 +132,10 @@ function F.draw()
 	if F.player.animState ~= nil then
 		curAnim = F.player.anim[F.player.animState]
 		curAnim[1]:draw(curAnim[2], F.player.x, F.player.y)
+	end
+
+	for k,v in pairs(F.toPrint) do
+		gr.print(v[1], v[2], v[3])
 	end
 
 	if F.debug then
@@ -132,9 +160,7 @@ end
 function F.keypressed(key)
 	
 	if key == F.player.ctrl.left[1]
-	or key == F.player.ctrl.right[1]
-	or key == F.player.ctrl.up[1]
-	or key == F.player.ctrl.down[1] then
+	or key == F.player.ctrl.right[1] then
         F.player.animState = "run"
     end
 
@@ -151,11 +177,13 @@ end
 
 function F.keyreleased(key)
 	if key == F.player.ctrl.left[1]
-	or key == F.player.ctrl.right[1]
-	or key == F.player.ctrl.up[1]
-	or key == F.player.ctrl.down[1] then
+	or key == F.player.ctrl.right[1] then
         F.player.animState = "idle"
     end
+end
+
+function F.print( text, x, y )
+	table.insert(F.toPrint, {text, x, y})
 end
 
 function F.drawBlock(blockTitle, px, py, block)

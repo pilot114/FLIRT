@@ -1,11 +1,13 @@
 require "src/flirt"
 
+-- animation examples
+
 function love.load()
-	F.init()
+	F.init(false, "side")
 	
 	animations = {
 		idle = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1),
-		run = F.createAnim("playerRun", "cat", 512, 256, "1-2:1:1-2:2:1-2:3:1-2:4", 0.1)
+		-- run = F.createAnim("playerRun", "cat", 512, 256, "1-2:1:1-2:2:1-2:3:1-2:4", 0.1)
 		-- walk<> run<> jump<> lookup<> stoop<> rise
 	}
 	spellRun = function()
@@ -19,8 +21,7 @@ function love.load()
 		-- custom
 		spell = {"q", spellRun}
 	}
-	F.createPlayer(animations, controls, 100, 200)
-	-- F.createEnemy(animations)
+	F.createPlayer(animations, controls)
 end
 
 function love.update(dt)
