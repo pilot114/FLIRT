@@ -1,6 +1,6 @@
 local anim8 = require "src/anim8"
 local sti = require "src/sti"
-local actors = require "src/actors"
+local ac = require "src/actors"
 local nh = require "src/noobHelpers"
 
 gr = love.graphics
@@ -9,7 +9,7 @@ kb = love.keyboard
 fs = love.filesystem
 
 F = {
-	version = "0.0.2",
+	version = "0.0.3",
 	debug = false,
 	-- camera mode. current only "side"
 	mode = "side",
@@ -37,46 +37,21 @@ F = {
 
 	-- (see createPlayer)
 	player = {},
+
+	-- global control of objects (activated, viewed etc)
+	objPool = {},
+
+	-- for objects beyond time and space ...
+	pitfall = {}
 }
 
 function F.createPlayer( animations, controls, x, y )
-	-- set default user position
-	if x == nil and y == nil then
-		x = gr.getWidth()/2
-		y = gr.getHeight()/2
-	end
-
-	F.player = {
-		-- array {animObj, imageObj, frameWidth, frameHeight}
-		anim = animations,
-		-- ?
-		-- array {key, speed/callback, assets( anim/sound etc.)}
-		ctrl = controls,
-		-- player center position
-		x = x,
-		y = y,
-		dir = 1, -- left 0, right 1, up 1.5, down 2
-	}
-
-	-- try get user size from first animation and centrize
-	for k,animation in pairs(animations) do
-		if animation ~= nil then
-			F.player.width  = animation[3]
-			F.player.height = animation[4]
-			F.player.x = F.player.x - F.player.width/2
-			F.player.y = F.player.y - F.player.height/2
-		end
-		break
-	end
-
-	if F.player.anim.idle ~= nil then
-		F.player.animState = "idle"
-	end
+	F.player = ac.createPlayer( animations, controls, x, y )
 end
 
-function F.init(debug, mode)
-	F.debug = debug
+function F.init(mode, debug)
 	F.mode  = mode
+	F.debug = debug
 	F.registerAssets()
 end
 
@@ -122,17 +97,11 @@ function F.createAnim(aName, name, x, y, frames, speed )
 end
 
 function F.update(dt)
-	if F.player.animState ~= nil then
-		curAnim = F.player.anim[F.player.animState]
-		curAnim[1]:update(dt)
-	end
+	F.player.update(dt)
 end
 
 function F.draw()
-	if F.player.animState ~= nil then
-		curAnim = F.player.anim[F.player.animState]
-		curAnim[1]:draw(curAnim[2], F.player.x, F.player.y)
-	end
+	F.player.draw()
 
 	for k,v in pairs(F.toPrint) do
 		gr.print(v[1], v[2], v[3])
@@ -158,16 +127,8 @@ function F.draw()
 end
 
 function F.keypressed(key)
-	
-	if key == F.player.ctrl.left[1]
-	or key == F.player.ctrl.right[1] then
-        F.player.animState = "run"
-    end
 
-	if key == F.player.ctrl.spell[1] then
-		-- TODO: in draw?
-        F.player.ctrl.spell[2]()
-    end
+	F.player.keypressed(key)
 
 	-- debug
 	if key == "`" then
@@ -176,10 +137,8 @@ function F.keypressed(key)
 end
 
 function F.keyreleased(key)
-	if key == F.player.ctrl.left[1]
-	or key == F.player.ctrl.right[1] then
-        F.player.animState = "idle"
-    end
+
+	F.player.keyreleased(key)
 end
 
 function F.print( text, x, y )

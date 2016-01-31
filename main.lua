@@ -3,15 +3,16 @@ require "src/flirt"
 -- animation examples
 
 function love.load()
-	F.init(false, "side")
+	F.init("side", false)
 	
 	animations = {
-		idle = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1),
-		-- run = F.createAnim("playerRun", "cat", 512, 256, "1-2:1:1-2:2:1-2:3:1-2:4", 0.1)
+		-- one frame for static
+		idle = F.createAnim("playerRun", "player", 64, 96, "4:1", 0.1),
+		run = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1),
 		-- walk<> run<> jump<> lookup<> stoop<> rise
 	}
 	spellRun = function()
-		love.graphics.print("hello", 300, 300)
+		F.print("hello", 300, 300)
 	end
 	controls = {
 		up = {"w", 4000},
@@ -21,7 +22,7 @@ function love.load()
 		-- custom
 		spell = {"q", spellRun}
 	}
-	F.createPlayer(animations, controls)
+	F.createPlayer(animations, controls, 100, 100)
 end
 
 function love.update(dt)
