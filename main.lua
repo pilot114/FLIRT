@@ -4,25 +4,13 @@ require "src/flirt"
 
 function love.load()
 	F.init("side", false)
-	
-	animations = {
-		-- one frame for static
-		idle = F.createAnim("playerRun", "player", 64, 96, "4:1", 0.1),
-		run = F.createAnim("playerIdle", "player", 64, 96, "1-6:1", 0.1),
-		-- walk<> run<> jump<> lookup<> stoop<> rise
+
+	F.debugAnimations = {
+		player = F.createAnim("player", "player", 64, 96, "1-6:1", 0.1),
+		explosion = F.createAnim("explosion", "explosion", 96, 96, "1-12:1", 0.1),
+		protoman = F.createAnim("protoman", "protoman", 30, 40, "1-10:1:1-7:2", 0.1),
+		cat = F.createAnim("cat", "cat", 512, 256, "1-2:1:1-2:2:1-2:3:1-2:4", 0.1),
 	}
-	spellRun = function()
-		F.print("hello", 300, 300)
-	end
-	controls = {
-		up = {"w", 4000},
-		left = {"a", 4000},
-		down = {"s", 4000},
-		right = {"d", 4000},
-		-- custom
-		spell = {"q", spellRun}
-	}
-	F.createPlayer(animations, controls, 100, 100)
 end
 
 function love.update(dt)

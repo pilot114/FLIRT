@@ -36,13 +36,14 @@ F = {
 	-- ACTORS incapsulate assets, linked with them
 
 	-- (see createPlayer)
-	player = {},
+	player = nil,
 
 	-- global control of objects (activated, viewed etc)
-	objPool = {},
+	objPool = nil,
 
 	-- for objects beyond time and space ...
-	pitfall = {}
+	pitfall = nil,
+
 }
 
 function F.createPlayer( animations, controls, x, y )
@@ -97,14 +98,28 @@ function F.createAnim(aName, name, x, y, frames, speed )
 end
 
 function F.update(dt)
-	F.player.update(dt)
+	if F.player ~= nil then
+		F.player.update(dt)
+	end
+
+	if F.debug then
+		if F.debugAnimations ~= nil then
+			for k,v in pairs(F.debugAnimations) do
+				v[1]:update(dt)
+			end
+		end
+	end
 end
 
 function F.draw()
-	F.player.draw()
+	if F.player ~= nil then
+		F.player.draw()
+	end
 
-	for k,v in pairs(F.toPrint) do
-		gr.print(v[1], v[2], v[3])
+	if F.toPrint ~= nil then
+		for k,v in pairs(F.toPrint) do
+			gr.print(v[1], v[2], v[3])
+		end
 	end
 
 	if F.debug then
@@ -123,12 +138,25 @@ function F.draw()
 		drawBlock( "Fonts: ", 	 F.cache.font)
 		drawBlock( "Music: ", 	 F.cache.music)
 		drawBlock( "Sound: ", 	 F.cache.sound)
+
+		gr.print("toPrint: "..#F.toPrint, 10, 230)
+
+		-- TODO: set debug sub-modes
+		if F.debugAnimations ~= nil then
+			local x, y  = 0, 0
+			for k,anim in pairs(F.debugAnimations) do
+				anim[1]:draw(anim[2], x, y)
+				x = x + anim[3]
+			end
+		end
 	end
 end
 
 function F.keypressed(key)
 
-	F.player.keypressed(key)
+	if F.player ~= nil then
+		F.player.keypressed(key)
+	end
 
 	-- debug
 	if key == "`" then
@@ -138,10 +166,18 @@ end
 
 function F.keyreleased(key)
 
-	F.player.keyreleased(key)
+	if F.player ~= nil then
+		F.player.keyreleased(key)
+	end
 end
 
+-- only for debug
 function F.print( text, x, y )
+	for k,v in pairs(F.toPrint) do
+		if v[1] == text and v[2] == x and v[3] == y then
+			return nil
+		end
+	end
 	table.insert(F.toPrint, {text, x, y})
 end
 
